@@ -1,0 +1,12 @@
+# your connection details: never commit
+url
+token
+ha.toml
+# local state
+.venv/
+out/
+diagnostics/
+snapshots/
+logs/
+__pycache__/
+.pytest_cache/
