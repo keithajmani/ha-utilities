@@ -16,7 +16,7 @@ Paste this into your agent's instructions, such as `CLAUDE.md`, `AGENTS.md`, or 
 ```markdown
 ## Home Assistant
 
-Use `~/ha-utilities/ha.py` for every Home Assistant read and change. Do not write
+Use `~/ha-utilities/ha-cli/ha.py` for every Home Assistant read and change. Do not write
 your own REST or WebSocket scripts. `ha.py --help` and `ha.py <command> --help`
 list the commands.
 

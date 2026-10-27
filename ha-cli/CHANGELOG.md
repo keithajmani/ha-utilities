@@ -1,6 +1,6 @@
-# Changelog
+# ha-cli changelog
 
-## 0.1.0 (2026-10-26)
+## 0.1.0 (2026-10-26), tag ha-cli-v0.1.0
 
 First public release.
 
