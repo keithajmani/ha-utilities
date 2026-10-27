@@ -20,5 +20,5 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - run: pip install -r requirements.txt pytest aiohttp pyflakes
-      - run: python -m pyflakes ha.py ha_lib tests
+      - run: python -m pyflakes ha.py ha_cli tests
       - run: python -m pytest -q

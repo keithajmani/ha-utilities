@@ -1,10 +1,10 @@
 # Adding commands
 
-Every module in `ha_lib/commands/` is loaded at start-up. A command is a function registered with `@command`. Its arguments are added by a function stored on `fn.args`.
+Every module in `ha_cli/commands/` is loaded at start-up. A command is a function registered with `@command`. Its arguments are added by a function stored on `fn.args`.
 
 ```
 ha.py                 entry point (re-runs under .venv)
-ha_lib/
+ha_cli/
   cli.py              builds the argument parser from the registry, runs a command
   client.py           REST (urllib) and WebSocket (websockets) clients, one login per run
   config.py           settings folder, url, token, ha.toml

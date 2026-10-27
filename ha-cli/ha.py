@@ -11,7 +11,7 @@ if os.path.exists(VENV_PY) and os.path.realpath(sys.prefix) != os.path.realpath(
     os.execv(VENV_PY, [VENV_PY, os.path.realpath(__file__)] + sys.argv[1:])
 
 sys.path.insert(0, HERE)
-from ha_lib.cli import main  # noqa: E402
+from ha_cli.cli import main  # noqa: E402
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))

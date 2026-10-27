@@ -106,7 +106,7 @@ Details, exit codes and what is and isn't undoable: [docs/safety.md](docs/safety
 
 ## Extending
 
-Add a function in `ha_lib/commands/`, register it with `@command("name", "help", write=...)`, and it shows up in `ha.py --help`. Writes return a `Plan`, and the safety steps come for free. See [docs/extending.md](docs/extending.md).
+Add a function in `ha_cli/commands/`, register it with `@command("name", "help", write=...)`, and it shows up in `ha.py --help`. Writes return a `Plan`, and the safety steps come for free. See [docs/extending.md](docs/extending.md).
 
 ## Tests
 
