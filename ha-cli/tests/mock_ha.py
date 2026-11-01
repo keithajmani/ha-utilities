@@ -2,6 +2,7 @@
 import copy
 import json
 import sys
+from datetime import datetime, timedelta
 from aiohttp import web
 
 TOKEN = "test-token"
@@ -53,12 +54,18 @@ async def state_one(req):
     raise web.HTTPNotFound()
 
 
+HISTORY = [("off", "2026-10-25T20:00:00+00:00"), ("on", "2026-10-25T21:00:00+00:00"),
+           ("off", "2026-10-25T21:05:00+00:00"), ("on", "2026-10-27T12:00:00+00:00")]
+
+
 async def history(req):
+    """Like HA: the window ends one day after the start unless end_time is given."""
     auth(req)
     eids = req.query["filter_entity_id"].split(",")
-    return web.json_response([[{"entity_id": e, "state": "off", "last_changed": "2026-10-25T20:00:00+00:00"},
-                               {"state": "on", "last_changed": "2026-10-25T21:00:00+00:00"},
-                               {"state": "off", "last_changed": "2026-10-25T21:05:00+00:00"}] for e in eids])
+    start = datetime.fromisoformat(req.match_info["start"])
+    end = datetime.fromisoformat(req.query["end_time"]) if "end_time" in req.query else start + timedelta(days=1)
+    rows = [{"state": st, "last_changed": ts} for st, ts in HISTORY if start <= datetime.fromisoformat(ts) <= end]
+    return web.json_response([[dict(rows[0], entity_id=e)] + rows[1:] for e in eids] if rows else [])
 
 
 async def template(req):

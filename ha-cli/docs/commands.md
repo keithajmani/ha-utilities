@@ -28,7 +28,7 @@ climate.hallway  heat  changed="Oct 25 21:04"  current_temperature=21.5  tempera
 ```
 
 ### `history <entity>... [--since 6h] [--until T] [--include-start]`
-State changes in a time window, oldest first. The state at the start of the window is left out unless you pass `--include-start`.
+State changes in a time window, oldest first. The window runs from `--since` to `--until`, or to now when `--until` is left out, however long it is. The state at the start of the window is left out unless you pass `--include-start`.
 
 ### `template '<jinja>'`
 Renders a template in Home Assistant and prints the result. Good for quick questions:

@@ -86,9 +86,10 @@ def parse_since(value, tzname):
 def history(ctx):
     a = ctx.args
     start = parse_since(a.since, ctx.s.timezone)
-    params = {"filter_entity_id": ",".join(a.entity), "minimal_response": "", "no_attributes": ""}
-    if a.until:
-        params["end_time"] = parse_since(a.until, ctx.s.timezone).isoformat()
+    end = parse_since(a.until, ctx.s.timezone) if a.until else datetime.now(timezone.utc)
+    # always send end_time: without it HA stops one day after the start
+    params = {"filter_entity_id": ",".join(a.entity), "minimal_response": "", "no_attributes": "",
+              "end_time": end.isoformat()}
     data = ctx.ha.get(f"/api/history/period/{start.isoformat()}", params=params) or []
     rows = []
     for series in data:

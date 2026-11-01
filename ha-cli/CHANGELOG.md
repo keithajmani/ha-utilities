@@ -1,5 +1,9 @@
 # ha-cli changelog
 
+## 0.1.1 (2026-11-01), tag ha-cli-v0.1.1
+
+- Fix: `history --since` longer than a day returned only the first 24 hours, because Home Assistant ends the window one day after the start unless it is given an end time. `history` now always sends one: `--until`, or now.
+
 ## 0.1.0 (2026-10-26), tag ha-cli-v0.1.0
 
 First public release.

@@ -163,3 +163,13 @@ def test_bad_token(ha):
     (ha.home / "token").write_text("wrong\n")
     rc, _, err = ha("state", "switch.porch_light")
     assert rc == 1 and "token rejected" in err
+
+
+def test_history_window_runs_to_now(ha):
+    # HA ends the window one day after the start unless end_time is sent; ha.py must send it
+    rc, out, err = ha("history", "switch.porch_light", "--since", "2026-10-25T00:00+00:00", "--json")
+    assert rc == 0, err
+    assert [r["state"] for r in json.loads(out)] == ["on", "off", "on"]
+    rc, out, _ = ha("history", "switch.porch_light", "--since", "2026-10-25T00:00+00:00",
+                    "--until", "2026-10-26T00:00+00:00", "--json")
+    assert [r["state"] for r in json.loads(out)] == ["on", "off"]
