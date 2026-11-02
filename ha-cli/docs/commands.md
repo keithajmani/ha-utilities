@@ -30,6 +30,14 @@ climate.hallway  heat  changed="Oct 25 21:04"  current_temperature=21.5  tempera
 ### `history <entity>... [--since 6h] [--until T] [--include-start]`
 State changes in a time window, oldest first. The window runs from `--since` to `--until`, or to now when `--until` is left out, however long it is. The state at the start of the window is left out unless you pass `--include-start`.
 
+### `stats <statistic>... [--since 7d] [--until T] [--period hour|day|...]` / `stats --find TEXT`
+Long-term statistics: hourly (or 5-minute, daily, weekly, monthly) mean, min and max for measurement sensors, and sum or state for energy-type sensors. Home Assistant keeps these long after normal history is purged, including for sensors that have since been removed or renamed. `--find` lists statistic ids whose id or name contains the text.
+
+```console
+$ ha.py stats --find laundry
+$ ha.py stats sensor.laundry_temperature --since 90d --period day
+```
+
 ### `template '<jinja>'`
 Renders a template in Home Assistant and prints the result. Good for quick questions:
 `ha.py template '{{ states.light | selectattr("state","eq","on") | list | count }}'`

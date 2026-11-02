@@ -160,6 +160,13 @@ def ws_handle(msg):
         if "create_backup" in msg:
             DB["backup_cfg"]["create_backup"].update(msg["create_backup"])
         return None
+    if t == "recorder/list_statistic_ids":
+        return [{"statistic_id": "sensor.laundry_temperature", "name": "Laundry Temperature", "statistics_unit_of_measurement": "°C"},
+                {"statistic_id": "sensor.porch_energy", "name": "Porch Energy", "statistics_unit_of_measurement": "kWh"}]
+    if t == "recorder/statistics_during_period":
+        pts = [{"start": 1761436800000, "mean": 20.5, "min": 19.8, "max": 21.4},
+               {"start": "2026-10-26T01:00:00+00:00", "mean": 22.25, "min": 21.0, "max": 24.0}]
+        return {sid: pts for sid in msg["statistic_ids"] if sid == "sensor.laundry_temperature"}
     raise KeyError("unknown_command")
 
 

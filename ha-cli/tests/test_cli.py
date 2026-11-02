@@ -173,3 +173,15 @@ def test_history_window_runs_to_now(ha):
     rc, out, _ = ha("history", "switch.porch_light", "--since", "2026-10-25T00:00+00:00",
                     "--until", "2026-10-26T00:00+00:00", "--json")
     assert [r["state"] for r in json.loads(out)] == ["on", "off"]
+
+
+def test_stats_find_and_read(ha):
+    rc, out, err = ha("stats", "--find", "laundry")
+    assert rc == 0, err
+    assert "sensor.laundry_temperature" in out and "porch" not in out
+    rc, out, err = ha("stats", "sensor.laundry_temperature", "--since", "30d", "--json")
+    assert rc == 0, err
+    rows = json.loads(out)
+    assert [r["mean"] for r in rows] == [20.5, 22.25] and rows[1]["max"] == 24.0
+    rc, _, err = ha("stats")
+    assert rc == 1 and "--find" in err

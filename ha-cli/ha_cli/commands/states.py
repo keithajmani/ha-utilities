@@ -115,6 +115,57 @@ def _history_args(p):
 history.args = _history_args
 
 
+@command("stats", "long-term statistics (hourly/daily mean, min, max) for sensors, beyond the history window")
+def stats(ctx):
+    a = ctx.args
+    if a.find is not None:
+        ids = ctx.ha.ws("recorder/list_statistic_ids")
+        rows = [{"statistic": i["statistic_id"], "unit": i.get("statistics_unit_of_measurement") or "",
+                 "name": i.get("name") or ""}
+                for i in ids if a.find.lower() in (i["statistic_id"] + " " + (i.get("name") or "")).lower()]
+        rows.sort(key=lambda r: r["statistic"])
+        ctx.out.rows(rows, ["statistic", "unit", "name"], note=None if rows else f"no statistics match {a.find!r}")
+        return
+    if not a.statistic:
+        raise HAError("give one or more statistic ids", "or use --find TEXT to search for them")
+    start = parse_since(a.since, ctx.s.timezone)
+    end = parse_since(a.until, ctx.s.timezone) if a.until else datetime.now(timezone.utc)
+    data = ctx.ha.ws("recorder/statistics_during_period", start_time=start.isoformat(), end_time=end.isoformat(),
+                     statistic_ids=a.statistic, period=a.period,
+                     types=["mean", "min", "max", "sum", "state"]) or {}
+    fmt = "%b %d %H:%M" if a.period in ("5minute", "hour") else "%b %d"
+    rows = []
+    for sid, points in data.items():
+        for p in points:
+            r = {"ts": p.get("start"), "statistic": sid}
+            for k in ("mean", "min", "max", "sum", "state"):
+                if p.get(k) is not None:
+                    r[k] = round(p[k], 2)
+            rows.append(r)
+    for r in rows:
+        ts = r["ts"]
+        # HA sends start as epoch milliseconds or an ISO string, depending on version
+        if isinstance(ts, (int, float)):
+            r["ts"] = datetime.fromtimestamp(ts / 1000, timezone.utc).isoformat()
+    rows.sort(key=lambda r: (r["ts"], r["statistic"]))
+    for r in rows:
+        r["time"] = ctx.out.time(r.pop("ts"), fmt)
+    cols = ["time", "statistic"] if len(a.statistic) > 1 else ["time"]
+    rest = [k for k in ("mean", "min", "max", "sum", "state") if any(k in r for r in rows)]
+    ctx.out.rows(rows, cols + rest, note=None if rows else f"no statistics since {ctx.out.time(start.isoformat())}")
+
+
+def _stats_args(p):
+    p.add_argument("statistic", nargs="*", help="statistic ids (usually the sensor's entity id)")
+    p.add_argument("--find", metavar="TEXT", help="list statistic ids whose id or name contains TEXT, including removed sensors")
+    p.add_argument("--since", default="7d", help="30m, 6h, 2d or ISO time (local); default 7d")
+    p.add_argument("--until", help="end of window, same format")
+    p.add_argument("--period", default="hour", choices=["5minute", "hour", "day", "week", "month"], help="default hour")
+
+
+stats.args = _stats_args
+
+
 @command("template", "evaluate a Jinja template in HA")
 def template(ctx):
     ctx.out.line(ctx.ha.rest("POST", "/api/template", body={"template": ctx.args.template}, raw=True))
