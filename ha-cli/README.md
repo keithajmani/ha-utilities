@@ -27,7 +27,7 @@ dry run, nothing changed. re-run with --yes --plan 30d623 to apply
 
 | Area | Read | Change |
 |---|---|---|
-| States | `state`, `history`, `template`, `logs` | `call` (service calls) |
+| States | `state`, `history`, `stats`, `template`, `logs` | `call` (service calls) |
 | Registries | `entities`, `devices`, `areas`, `exposed` | `entity set`, `device set`, `expose` |
 | Health | `repairs`, `diagnostics` | |
 | Dashboards | `dashboard list`, `dashboard get` | `dashboard save` |
