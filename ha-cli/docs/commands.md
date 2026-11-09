@@ -112,17 +112,64 @@ Saves a dashboard from a JSON or YAML file. With `--view`, the file holds a sing
 
 ---
 
-## Automations and scripts
+## Automations, scripts and scenes
 
-Only automations and scripts created in the UI (stored in `automations.yaml` and `scripts.yaml`) can be read and saved. Ones defined elsewhere in YAML have no config id.
+Only automations, scripts and scenes created in the UI (stored in `automations.yaml`, `scripts.yaml` and `scenes.yaml`) can be read and saved. Ones defined elsewhere in YAML have no config id.
 
 ### `automation get <automation entity id|config id> [--yaml | --out file]`
 ### `script get <script entity id|object id> [--yaml | --out file]`
+### `scene get <scene entity id|config id> [--yaml | --out file]`
 Prints the config.
 
 ### `automation save <id> --from file [--create]` *(change)*
 ### `script save <id> --from file [--create]` *(change)*
-Saves the config from JSON or YAML. Home Assistant reloads automations or scripts after a save. A new id needs `--create`. Undoing a create removes the automation or script again.
+### `scene save <id> --from file [--create]` *(change)*
+Saves the config from JSON or YAML. Home Assistant reloads automations, scripts or scenes after a save. A new id needs `--create`. Undoing a create removes it again. Saving a scene changes its stored config only. It does not turn the scene on.
+
+### `automation traces <automation>` / `script traces <script>`
+Recent runs, newest first, one line each: number, start time, result, trigger (automations only), the step it ended on, and any error. Results are Home Assistant's own words: `finished`, `failed_conditions`, `error`, `aborted`, `cancelled`, `running` and so on. Home Assistant keeps the last 5 runs of each automation or script unless `stored_traces` says otherwise, and keeps them across restarts.
+
+```console
+$ ha.py automation traces automation.garage_door_open_alert
+1  Nov 08 20:00:00  result=error  trigger="state of cover.garage_door"  step=action/0  error="Action notify.send_message not found"  run=7c1f…
+2  Nov 08 17:00:00  result=failed_conditions  trigger="state of cover.garage_door"  step=condition/0  run=2b9a…
+```
+
+### `automation trace <automation> [--run N|id] [--yaml | --out file]` / `script trace <script> ...`
+One run step by step, in the order it happened: the trigger, each condition as `true` or `false`, and each action with what it did (`called notify.send_message`, `choice 1`, `wait done`, …) and any error. `what` is the step's alias, or else a short description of it. `--run` picks the run: 1 is the newest (the default), 2 the one before, or a run id from `traces`. `--yaml`, `--out` or `--json` give the whole trace, including variables, for when the summary isn't enough.
+
+```console
+$ ha.py automation trace automation.garage_door_open_alert
+run 7c1f…  Nov 08 20:00:00  error  trigger="state of cover.garage_door"
+trigger/0    20:00:00  what="trigger=state cover.garage_door"  result="state of cover.garage_door"
+condition/0  20:00:00  what="condition=state input_boolean.guest_mode"  result=true
+action/0     20:00:01  what="Tell the kitchen"  result="called notify.send_message"  error="Action notify.send_message not found"
+ERROR  Action notify.send_message not found
+```
+
+---
+
+## Helpers
+
+Helpers made in **Settings → Helpers** of these types: toggle (`input_boolean`), button (`input_button`), date/time (`input_datetime`), number (`input_number`), dropdown (`input_select`), text (`input_text`), `counter`, `timer` and `schedule`. Helpers set up through an integration's screens (template, group, utility meter, threshold and others) are not covered, and nor are helpers defined in YAML.
+
+### `helper list [--type t] [--search text]`
+UI helpers with entity id, type, name and icon.
+
+### `helper get <entity> [--yaml | --out file]`
+The helper's config, ready to edit and pass to `helper save`.
+
+### `helper save <entity> --from file` / `helper save <type> --from file --create` *(change)*
+Saves a helper's config from JSON or YAML. Home Assistant replaces the whole config on a save, so the file must hold every field you want to keep. The plan lists each field that changes, including fields that the file leaves out, which are removed. To make a new helper, give the type and `--create`. Home Assistant makes the new entity id from the `name`. Undoing a save puts the old config back. Undoing a create removes the helper again.
+
+```console
+$ ha.py helper save input_number.bedtime_volume --from vol.yaml
+PLAN 33c983  helper · 2 changes
+  input_number bedtime_volume  max: 100 → 60
+  input_number bedtime_volume  mode: slider → box
+ROLLBACK  save the before-copy of the helper back  (ha.py restore <snapshot printed after apply>)
+dry run, nothing changed. re-run with --yes --plan 33c983 to apply
+```
 
 ---
 

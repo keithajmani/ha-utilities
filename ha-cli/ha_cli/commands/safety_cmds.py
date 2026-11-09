@@ -1,4 +1,5 @@
 """Undo from a before-copy, and the audit trail."""
+import inspect
 import json
 import os
 from datetime import datetime, timezone
@@ -24,7 +25,9 @@ def restore(ctx):
     fn = RESTORERS.get(snap.get("kind"))
     if not fn:
         raise HAError(f"snapshot kind {snap.get('kind')!r} has no restorer")
-    plan = fn(ctx, snap["before"])
+    # a restorer may also take the read-back from after the change (e.g. the id of something it created)
+    takes_after = "after" in inspect.signature(fn).parameters
+    plan = fn(ctx, snap["before"], after=snap.get("after")) if takes_after else fn(ctx, snap["before"])
     plan.name = "restore-" + plan.name
     ctx.out.line(f"restoring {os.path.basename(path)} (from: {' '.join(snap.get('command', []))})")
     return run(ctx, plan)

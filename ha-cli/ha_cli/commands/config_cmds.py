@@ -1,4 +1,4 @@
-"""Dashboards (lovelace), automations and scripts: read, and save with diff + before-copy."""
+"""Dashboards (lovelace), automations, scripts and scenes: read, and save with diff + before-copy."""
 import difflib
 import json
 import os
@@ -171,22 +171,23 @@ def restore_dashboard(ctx, before):
     return dashboard_plan(ctx, before["path"], before["config"], title="restore dashboard")
 
 
-# ---------- automations and scripts ----------
+# ---------- automations, scripts and scenes ----------
 
 KINDS = {
     "automation": {"api": "/api/config/automation/config/", "domain": "automation"},
     "script": {"api": "/api/config/script/config/", "domain": "script"},
+    "scene": {"api": "/api/config/scene/config/", "domain": "scene"},
 }
 
 
-def _config_id(ctx, kind, ref):
-    """automation: the automation's id (from entity attributes if an entity id is given). script: object id."""
-    if kind == "automation":
-        if ref.startswith("automation."):
+def config_id(ctx, kind, ref):
+    """automation, scene: the config id (from the entity's id attribute if an entity id is given). script: object id."""
+    if kind in ("automation", "scene"):
+        if ref.startswith(kind + "."):
             st = ctx.ha.get(f"/api/states/{ref}")
             cid = st.get("attributes", {}).get("id")
             if not cid:
-                raise HAError(f"{ref} has no id attribute", "it is not UI-managed (YAML-only automations cannot be saved)")
+                raise HAError(f"{ref} has no id attribute", f"it is not UI-managed (YAML-only {kind}s cannot be saved)")
             return cid
         return ref
     return ref.split(".", 1)[1] if ref.startswith("script.") else ref
@@ -215,7 +216,7 @@ def config_plan(ctx, kind, cid, new, title=None):
                                                 new.get("alias") or "updated")]
 
         def apply():
-            ctx.ha.post(api, body=new)  # HA reloads automations/scripts after a config save
+            ctx.ha.post(api, body=new)  # HA reloads automations, scripts and scenes after a config save
 
     def read_back():
         return _read_config(ctx, kind, cid)
@@ -236,7 +237,7 @@ def config_plan(ctx, kind, cid, new, title=None):
 
 def _make_get(kind):
     def fn(ctx):
-        cid = _config_id(ctx, kind, ctx.args.target)
+        cid = config_id(ctx, kind, ctx.args.target)
         cfg = _read_config(ctx, kind, cid)
         if cfg is None:
             raise HAError(f"no {kind} with id {cid}")
@@ -247,7 +248,7 @@ def _make_get(kind):
 def _make_save(kind):
     def fn(ctx):
         a = ctx.args
-        cid = _config_id(ctx, kind, a.target)
+        cid = config_id(ctx, kind, a.target)
         new = load_file(a.file)
         if _read_config(ctx, kind, cid) is None and not a.create:
             raise HAError(f"no {kind} with id {cid}", "pass --create to make a new one")

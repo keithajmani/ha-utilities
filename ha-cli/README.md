@@ -31,7 +31,8 @@ dry run, nothing changed. re-run with --yes --plan 30d623 to apply
 | Registries | `entities`, `devices`, `areas`, `exposed` | `entity set`, `device set`, `expose` |
 | Health | `repairs`, `diagnostics` | |
 | Dashboards | `dashboard list`, `dashboard get` | `dashboard save` |
-| Automations, scripts | `automation get`, `script get` | `automation save`, `script save` |
+| Automations, scripts, scenes | `automation get`, `script get`, `scene get`, `automation traces`, `automation trace`, `script traces`, `script trace` | `automation save`, `script save`, `scene save` |
+| Helpers | `helper list`, `helper get` | `helper save` |
 | Integrations | `entries`, `homekit list` | `entry enable`, `entry disable`, `entry reload` |
 | Backups | `backups`, `backup config` | `backup set` |
 | Safety | `snapshots`, `audit` | `restore` |
