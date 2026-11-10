@@ -1,2 +1,2 @@
 """Core of ha.py: settings, HA clients, output, safety gate and command registry."""
-__version__ = "0.1.2"
+__version__ = "0.2.0"

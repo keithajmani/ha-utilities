@@ -6,7 +6,7 @@ Each utility lives in its own folder, with its own README, requirements and test
 
 | Utility | What it does |
 |---|---|
-| [**ha-cli**](ha-cli/README.md) (`ha.py`) | Reads and safe, reversible changes from the terminal: states, history, registries, dashboards, automations, integrations, backups. Every change is a dry run until you confirm it, can be undone, and is checkpointed in git. Built to work well with AI coding agents. |
+| [**ha-cli**](ha-cli/README.md) (`ha.py`) | Reads and safe, reversible changes from the terminal: states, history, registries, dashboards, automations and their traces, scripts, scenes, helpers, integrations, backups. Every change is a dry run until you confirm it, can be undone, and is checkpointed in git. Built to work well with AI coding agents. |
 
 ## Getting started
 

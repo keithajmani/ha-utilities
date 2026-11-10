@@ -185,3 +185,76 @@ def test_stats_find_and_read(ha):
     assert [r["mean"] for r in rows] == [20.5, 22.25] and rows[1]["max"] == 24.0
     rc, _, err = ha("stats")
     assert rc == 1 and "--find" in err
+
+
+def test_automation_traces_and_trace(ha):
+    rc, out, err = ha("automation", "traces", "automation.garage_door_open_alert")
+    assert rc == 0, err
+    lines = out.splitlines()
+    assert "result=error" in lines[0] and "run=r2" in lines[0]
+    assert "result=failed_conditions" in lines[1] and "step=condition/0" in lines[1]
+    rc, out, err = ha("automation", "trace", "automation.garage_door_open_alert")
+    assert rc == 0, err
+    assert 'what="Tell the kitchen"' in out and 'result="called notify.send_message"' in out
+    assert "ERROR  Action notify.send_message not found" in out
+    rc, out, _ = ha("automation", "trace", "1700000000001", "--run", "2")
+    assert "condition/0" in out and "result=false" in out and "action/0" not in out
+    rc, _, err = ha("automation", "trace", "1700000000001", "--run", "9")
+    assert rc == 1 and "1 to 2" in err
+    rc, _, err = ha("script", "trace", "script.nothing")
+    assert rc == 1 and "no stored traces" in err
+
+
+def test_scene_save_and_restore(ha, tmp_path):
+    f = tmp_path / "s.json"
+    ha("scene", "get", "scene.movie_night", "--out", str(f))
+    cfg = json.loads(f.read_text())
+    cfg["entities"]["switch.porch_light"] = "on"
+    f.write_text(json.dumps(cfg))
+    args = ["scene", "save", "scene.movie_night", "--from", str(f)]
+    out = ha(*args, "--yes", "--plan", plan_id(ha(*args)[1]))[1]
+    assert "verified by read-back" in out
+    assert '"on"' in ha("scene", "get", "1700000000101")[1]
+    snap = re.search(r"UNDO  ha.py restore (\S+)", out).group(1)
+    ha("restore", snap, "--yes", "--plan", plan_id(ha("restore", snap)[1]))
+    assert '"off"' in ha("scene", "get", "1700000000101")[1]
+
+
+def test_helper_save_shows_fields_and_restores(ha, tmp_path):
+    f = tmp_path / "h.yaml"
+    f.write_text("name: Bedtime volume\nmin: 0\nmax: 60\nstep: 5\n")
+    args = ["helper", "save", "input_number.bedtime_volume", "--from", str(f)]
+    out = ha(*args)[1]
+    assert "max: 100 → 60" in out and "mode: slider → (none)" in out  # a field left out is removed
+    out = ha(*args, "--yes", "--plan", plan_id(out))[1]
+    assert "verified by read-back" in out
+    snap = re.search(r"UNDO  ha.py restore (\S+)", out).group(1)
+    out = ha("restore", snap, "--yes", "--plan", plan_id(ha("restore", snap)[1]))[1]
+    assert "verified by read-back" in out
+    assert "max: 100" in ha("helper", "get", "input_number.bedtime_volume", "--yaml")[1]
+
+
+def test_helper_create_then_restore_removes_it(ha, tmp_path):
+    f = tmp_path / "h.yaml"
+    f.write_text("name: Movie mode\nicon: mdi:movie\n")
+    rc, _, err = ha("helper", "save", "input_boolean", "--from", str(f))
+    assert rc != 0 and "--create" in err
+    rc, _, err = ha("helper", "save", "input_boolean.guest_mode", "--from", str(f), "--create")
+    assert rc != 0 and "already exists" in err
+    args = ["helper", "save", "input_boolean", "--from", str(f), "--create"]
+    out = ha(*args, "--yes", "--plan", plan_id(ha(*args)[1]))[1]
+    assert "verified by read-back" in out
+    assert "input_boolean.movie_mode" in ha("helper", "list")[1]
+    snap = re.search(r"UNDO  ha.py restore (\S+)", out).group(1)
+    out = ha("restore", snap)[1]
+    assert "movie_mode  exists: True → False" in out
+    out = ha("restore", snap, "--yes", "--plan", plan_id(out))[1]
+    assert "verified by read-back" in out
+    assert "movie_mode" not in ha("helper", "list")[1]
+
+
+def test_helper_rejects_yaml_and_other_types(ha):
+    rc, _, err = ha("helper", "get", "switch.porch_light")
+    assert rc == 1 and "not a helper type" in err
+    rc, _, err = ha("helper", "get", "input_boolean.nope")
+    assert rc == 1 and "not a UI helper" in err

@@ -16,6 +16,8 @@ DB = {
          "attributes": {"friendly_name": "Porch Light"}},
         {"entity_id": "automation.garage_door_open_alert", "state": "on", "last_changed": "2026-10-20T10:00:00+00:00",
          "attributes": {"friendly_name": "Garage door open alert", "id": "1700000000001"}},
+        {"entity_id": "scene.movie_night", "state": "unknown", "last_changed": "2026-10-20T10:00:00+00:00",
+         "attributes": {"friendly_name": "Movie night", "id": "1700000000101"}},
     ],
     "areas": [{"area_id": "kitchen", "name": "Kitchen"}, {"area_id": "office", "name": "Office"},
               {"area_id": "front_porch", "name": "Front Porch"}],
@@ -23,13 +25,42 @@ DB = {
                 {"id": "dev2bbbbbbbb", "name": "Porch Lights", "name_by_user": None, "area_id": "front_porch", "manufacturer": "Lutron", "model": "Caseta"}],
     "entities": {
         "media_player.kitchen_speaker": {"entity_id": "media_player.kitchen_speaker", "device_id": "dev1aaaaaaaa", "area_id": None, "name": None, "original_name": "Kitchen Speaker", "platform": "alexa_devices", "icon": None, "disabled_by": None, "hidden_by": None, "modified_at": 1},
+        "input_boolean.guest_mode": {"entity_id": "input_boolean.guest_mode", "unique_id": "guest_mode", "device_id": None, "area_id": None, "name": None, "original_name": "Guest mode", "platform": "input_boolean", "icon": None, "disabled_by": None, "hidden_by": None, "modified_at": 1},
+        "input_number.bedtime_volume": {"entity_id": "input_number.bedtime_volume", "unique_id": "bedtime_volume", "device_id": None, "area_id": None, "name": None, "original_name": "Bedtime volume", "platform": "input_number", "icon": None, "disabled_by": None, "hidden_by": None, "modified_at": 1},
         "switch.porch_light": {"entity_id": "switch.porch_light", "device_id": "dev2bbbbbbbb", "area_id": "front_porch", "name": None, "original_name": "Porch Light", "platform": "lutron_caseta", "icon": None, "disabled_by": None, "hidden_by": None, "modified_at": 1},
     },
     "exposed": {"switch.porch_light": {"conversation": True, "cloud.alexa": False}},
     "entries": [{"entry_id": "e1", "domain": "alexa_media", "title": "Alexa Media Player", "state": "loaded", "disabled_by": None},
                 {"entry_id": "e2", "domain": "homekit", "title": "Sensors Bridge", "state": "loaded", "disabled_by": None}, {"entry_id": "e3", "domain": "homekit_controller", "title": "Old Camera", "state": "not_loaded", "disabled_by": None, "source": "ignore"}, {"entry_id": "e4", "domain": "tplink", "title": "Patio Plug", "state": "setup_retry", "disabled_by": None, "source": "user", "reason": "no route"}],
     "lovelace": {"lovelace-media": {"views": [{"path": "music", "title": "Music", "cards": [{"type": "entities", "entities": ["media_player.kitchen_speaker"]}]}]}},
-    "automations": {"1700000000001": {"id": "1700000000001", "alias": "Garage door open alert", "triggers": [], "actions": []}},
+    "config": {
+        "automation": {"1700000000001": {"id": "1700000000001", "alias": "Garage door open alert",
+                                         "triggers": [{"trigger": "state", "entity_id": "cover.garage_door", "to": "open", "for": "00:10:00"}],
+                                         "conditions": [{"condition": "state", "entity_id": "input_boolean.guest_mode", "state": "off"}],
+                                         "actions": [{"alias": "Tell the kitchen", "action": "notify.send_message", "target": {"entity_id": "notify.kitchen_speaker"}}]}},
+        "script": {},
+        "scene": {"1700000000101": {"id": "1700000000101", "name": "Movie night", "entities": {"switch.porch_light": "off"}}},
+    },
+    "helpers": {
+        "input_boolean": {"guest_mode": {"id": "guest_mode", "name": "Guest mode", "icon": "mdi:account"}},
+        "input_number": {"bedtime_volume": {"id": "bedtime_volume", "name": "Bedtime volume", "min": 0, "max": 100, "step": 5, "mode": "slider"}},
+    },
+    "traces": {
+        ("automation", "1700000000001"): [
+            {"run_id": "r1", "state": "stopped", "script_execution": "failed_conditions", "last_step": "condition/0",
+             "trigger": "state of cover.garage_door", "timestamp": {"start": "2026-11-08T22:00:00+00:00", "finish": "2026-11-08T22:00:00.1+00:00"},
+             "trace": {"trigger/0": [{"path": "trigger/0", "timestamp": "2026-11-08T22:00:00+00:00",
+                                      "changed_variables": {"trigger": {"description": "state of cover.garage_door"}}}],
+                       "condition/0": [{"path": "condition/0", "timestamp": "2026-11-08T22:00:00+00:00", "result": {"result": False}}]}},
+            {"run_id": "r2", "state": "stopped", "script_execution": "error", "last_step": "action/0", "error": "Action notify.send_message not found",
+             "trigger": "state of cover.garage_door", "timestamp": {"start": "2026-11-09T01:00:00+00:00", "finish": "2026-11-09T01:00:01+00:00"},
+             "trace": {"trigger/0": [{"path": "trigger/0", "timestamp": "2026-11-09T01:00:00+00:00",
+                                      "changed_variables": {"trigger": {"description": "state of cover.garage_door"}}}],
+                       "condition/0": [{"path": "condition/0", "timestamp": "2026-11-09T01:00:00+00:00", "result": {"result": True}}],
+                       "action/0": [{"path": "action/0", "timestamp": "2026-11-09T01:00:01+00:00", "error": "Action notify.send_message not found",
+                                     "result": {"params": {"domain": "notify", "service": "send_message"}}}]}},
+        ],
+    },
     "backup_cfg": {"create_backup": {"agent_ids": ["backup.local", "synology_dsm.nas"], "password": "SECRET-KEY", "include_database": True, "include_all_addons": False, "include_addons": ["core_mariadb"], "include_folders": []},
                    "retention": {"copies": 14, "days": None}, "schedule": {"recurrence": "daily", "time": "05:30:00", "days": []}},
     "calls": [],
@@ -80,19 +111,46 @@ async def services(req):
     return web.json_response([])
 
 
-async def automation_cfg(req):
+async def config_cfg(req):
     auth(req)
-    cid = req.match_info["cid"]
+    kind, cid = req.match_info["kind"], req.match_info["cid"]
+    store = DB["config"][kind]
     if req.method == "GET":
-        if cid not in DB["automations"]:
+        if cid not in store:
             raise web.HTTPNotFound()
-        return web.json_response(DB["automations"][cid])
+        return web.json_response(store[cid])
     if req.method == "DELETE":
-        DB["automations"].pop(cid, None)
+        store.pop(cid, None)
         return web.json_response({"result": "ok"})
     body = await req.json()
-    DB["automations"][cid] = {"id": cid, **{k: v for k, v in body.items() if k != "id"}}
+    store[cid] = {"id": cid, **{k: v for k, v in body.items() if k != "id"}} if kind != "script" else body
     return web.json_response({"result": "ok"})
+
+
+def helper_ws(domain, action, msg):
+    """Like HA's helper collections: update replaces the whole config; create makes the id from the name."""
+    store = DB["helpers"].setdefault(domain, {})
+    fields = {k: v for k, v in msg.items() if k not in ("id", "type", f"{domain}_id")}
+    if action == "list":
+        return list(store.values())
+    if action == "create":
+        iid = fields["name"].lower().replace(" ", "_")
+        store[iid] = {"id": iid, **fields}
+        DB["entities"][f"{domain}.{iid}"] = {"entity_id": f"{domain}.{iid}", "unique_id": iid, "platform": domain, "device_id": None,
+                                            "area_id": None, "name": None, "original_name": fields["name"], "icon": None,
+                                            "disabled_by": None, "hidden_by": None, "modified_at": 1}
+        return store[iid]
+    iid = msg[f"{domain}_id"]
+    if iid not in store:
+        raise KeyError("not_found")
+    if action == "update":
+        store[iid] = {"id": iid, **fields}
+        return store[iid]
+    if action == "delete":
+        del store[iid]
+        DB["entities"] = {k: v for k, v in DB["entities"].items() if not (v.get("platform") == domain and v.get("unique_id") == iid)}
+        return None
+    raise KeyError("unknown_command")
 
 
 async def diag(req):
@@ -103,6 +161,14 @@ async def diag(req):
 
 def ws_handle(msg):
     t = msg["type"]
+    if t.split("/")[0] in ("input_boolean", "input_number", "input_select", "input_text", "input_datetime",
+                           "input_button", "counter", "timer", "schedule") and t.count("/") == 1:
+        return helper_ws(*t.split("/"), msg)
+    if t == "trace/list":
+        return [{k: v for k, v in r.items() if k != "trace"} for r in DB["traces"].get((msg["domain"], msg["item_id"]), [])]
+    if t == "trace/get":
+        run = next(r for r in DB["traces"].get((msg["domain"], msg["item_id"]), []) if r["run_id"] == msg["run_id"])
+        return dict(run, config=DB["config"][msg["domain"]][msg["item_id"]])
     if t == "config/area_registry/list":
         return DB["areas"]
     if t == "config/device_registry/list":
@@ -194,7 +260,7 @@ app.add_routes([
     web.get("/api/states", states), web.get("/api/states/{eid}", state_one),
     web.get("/api/history/period/{start}", history), web.post("/api/template", template),
     web.post("/api/services/{domain}/{service}", services),
-    web.route("*", "/api/config/automation/config/{cid}", automation_cfg),
+    web.route("*", "/api/config/{kind}/config/{cid}", config_cfg),
     web.get("/api/diagnostics/config_entry/{eid}", diag),
     web.get("/api/websocket", websocket),
 ])

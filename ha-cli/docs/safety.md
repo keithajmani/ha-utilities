@@ -30,7 +30,8 @@ Git commits include only `ha.py`'s own files, so other work in the same repo is 
 |---|---|
 | `entity set`, `device set`, `expose` | restores the changed fields |
 | `dashboard save` | restores the whole dashboard config |
-| `automation save`, `script save` | restores the old config, or removes it if it was created |
+| `automation save`, `script save`, `scene save` | restores the old config, or removes it if it was created |
+| `helper save` | restores the old config, or removes the helper if it was created |
 | `entry disable` / `enable` | flips it back |
 | `backup set` | restores the changed settings |
 | `entry reload` | nothing to undo |
